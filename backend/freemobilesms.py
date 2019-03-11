@@ -4,7 +4,7 @@
 import logging
 from raspiot.raspiot import RaspIotRenderer
 from raspiot.utils import CommandError, MissingParameter
-from raspiot.profiles import SmsProfile
+from raspiot.events.alertSmsProfile import AlertSmsProfile
 import urllib
 import urllib2
 import ssl
@@ -19,10 +19,11 @@ class Freemobilesms(RaspIotRenderer):
     MODULE_AUTHOR = u'Cleep'
     MODULE_VERSION = u'1.0.0'
     MODULE_PRICE = 0
+    MODULE_CATEGORY = u'SERVICE'
     MODULE_DEPS = []
     MODULE_DESCRIPTION = u'Sends you SMS alerts using french Freemobile provider.'
-    MODULE_LOCKED = False
-    MODULE_TAGS = [u'sms', u'alert']
+    MODULE_LONGDESCRIPTION = u'French Freemobile telecom provider gives a way to send you (and only you) freely SMS using your account. Configure this application and your device will be able to send you some feeback directly on your mobile.'
+    MODULE_TAGS = [u'sms', u'alert', 'freemobile']
     MODULE_COUNTRY = u'fr'
     MODULE_URLINFO = None
     MODULE_URLHELP = None
@@ -35,8 +36,7 @@ class Freemobilesms(RaspIotRenderer):
         u'apikey': None
     }
 
-    RENDERER_PROFILES = [SmsProfile]
-    RENDERER_TYPE = u'alert.sms'
+    RENDERER_PROFILES = [AlertSmsProfile]
 
     FREEMOBILESMS_API_URL = u'https://smsapi.free-mobile.fr/sendmsg'
     FREEMOBILESMS_RESPONSE = {
