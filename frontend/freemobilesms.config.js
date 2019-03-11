@@ -56,7 +56,7 @@ var freemobilesmsConfigDirective = function(toast, freemobilesmsService, raspiot
     };
 
     return {
-        templateUrl: 'freemobilesms.directive.html',
+        templateUrl: 'freemobilesms.config.html',
         replace: true,
         scope: true,
         controller: freemobilesmsController,

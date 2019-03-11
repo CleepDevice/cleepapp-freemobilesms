@@ -1,7 +1,7 @@
 {
     "icon": "message-processing",
     "config": {
-        "js": ["freemobilesms.directive.js", "freemobilesms.service.js"],
-        "html": ["freemobilesms.directive.html"]
+        "js": ["freemobilesms.config.js", "freemobilesms.service.js"],
+        "html": ["freemobilesms.config.html"]
     }
 }
