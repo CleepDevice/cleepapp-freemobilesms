@@ -4,7 +4,7 @@
 import logging
 from raspiot.raspiot import RaspIotRenderer
 from raspiot.utils import CommandError, MissingParameter
-from raspiot.events.alertSmsProfile import AlertSmsProfile
+from raspiot.profiles.alertSmsProfile import AlertSmsProfile
 import urllib
 import urllib2
 import ssl
