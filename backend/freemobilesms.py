@@ -1,50 +1,50 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-    
-import logging
-from raspiot.raspiot import RaspIotRenderer
-from raspiot.utils import CommandError, MissingParameter
-from raspiot.profiles.alertSmsProfile import AlertSmsProfile
-import urllib
-import urllib2
-import ssl
 
-__all__ = [u'Freemobilesms']
+from urllib.parse import urlencode
+import requests
+from cleep.core import CleepRenderer
+from cleep.exception import CommandError, MissingParameter
+from cleep.profiles.alertprofile import AlertProfile
+
+__all__ = ["Freemobilesms"]
 
 
-class Freemobilesms(RaspIotRenderer):
+class Freemobilesms(CleepRenderer):
     """
     FreemobileSms renderer
     """
-    MODULE_AUTHOR = u'Cleep'
-    MODULE_VERSION = u'1.0.0'
+
+    MODULE_AUTHOR = "Cleep"
+    MODULE_VERSION = "1.0.0"
     MODULE_PRICE = 0
-    MODULE_CATEGORY = u'SERVICE'
+    MODULE_CATEGORY = "SERVICE"
     MODULE_DEPS = []
-    MODULE_DESCRIPTION = u'Sends you SMS alerts using french Freemobile provider.'
-    MODULE_LONGDESCRIPTION = u'French Freemobile telecom provider gives a way to send you (and only you) freely SMS using your account. Configure this application and your device will be able to send you some feeback directly on your mobile.'
-    MODULE_TAGS = [u'sms', u'alert', 'freemobile']
-    MODULE_COUNTRY = u'fr'
-    MODULE_URLINFO = None
+    MODULE_DESCRIPTION = "Sends you SMS alerts using french Freemobile provider."
+    MODULE_LONGDESCRIPTION = (
+        "French Freemobile telecom provider gives a way to send to you (and only you) ",
+        "freely SMS using your account. Configure this application and your device will ",
+        "be able to send you some message directly on your mobile."
+    )
+    MODULE_TAGS = ["sms", "alert", "freemobile"]
+    MODULE_COUNTRY = "fr"
+    MODULE_URLSITE = "https://github.com/CleepDevice/cleepapp-freemobilesms"
     MODULE_URLHELP = None
-    MODULE_URLBUGS = None
-    MODULE_URLSITE = None
+    MODULE_URLBUGS = "https://github.com/CleepDevice/cleepapp-freemobilesms/issues"
+    MODULE_URLINFO = "https://mobile.free.fr/"
 
-    MODULE_CONFIG_FILE = u'freemobilesms.conf'
-    DEFAULT_CONFIG = {
-        u'userid': None,
-        u'apikey': None
-    }
+    MODULE_CONFIG_FILE = "freemobilesms.conf"
+    DEFAULT_CONFIG = {"userid": None, "apikey": None}
 
-    RENDERER_PROFILES = [AlertSmsProfile]
+    RENDERER_PROFILES = [AlertProfile]
 
-    FREEMOBILESMS_API_URL = u'https://smsapi.free-mobile.fr/sendmsg'
+    FREEMOBILESMS_API_URL = "https://smsapi.free-mobile.fr/sendmsg"
     FREEMOBILESMS_RESPONSE = {
-        200: u'Message sent',
-        400: u'Missing parameter',
-        402: u'Limit reached',
-        403: u'Service not enabled',
-        500: u'Server error'
+        200: "Message sent",
+        400: "Missing parameter",
+        402: "Limit reached",
+        403: "Service not enabled",
+        500: "Server error",
     }
 
     def __init__(self, bootstrap, debug_enabled):
@@ -55,8 +55,7 @@ class Freemobilesms(RaspIotRenderer):
             bootstrap (dict): bootstrap objects
             debug_enabled: debug status
         """
-        #init
-        RaspIotRenderer.__init__(self, bootstrap, debug_enabled)
+        CleepRenderer.__init__(self, bootstrap, debug_enabled)
 
     def set_credentials(self, userid, apikey):
         """
@@ -69,20 +68,17 @@ class Freemobilesms(RaspIotRenderer):
         Returns:
             bool: True if credentials saved successfully
         """
-        if userid is None or len(userid)==0:
-            raise MissingParameter(u'Userid parameter is missing')
-        if apikey is None or len(apikey)==0:
-            raise MissingParameter(u'Apikey parameter is missing')
+        if userid is None or len(userid) == 0:
+            raise MissingParameter("Userid parameter is missing")
+        if apikey is None or len(apikey) == 0:
+            raise MissingParameter("Apikey parameter is missing")
 
-        #test credentials
+        # test credentials
         if not self.test(userid, apikey):
-            raise CommandError(u'Unable to send test')
+            raise CommandError("Unable to send test")
 
-        #save config
-        return self._update_config({
-            u'userid': userid,
-            u'apikey': apikey
-        })
+        # save config
+        return self._update_config({"userid": userid, "apikey": apikey})
 
     def test(self, userid=None, apikey=None):
         """
@@ -97,88 +93,87 @@ class Freemobilesms(RaspIotRenderer):
         """
         if userid is None or apikey is None:
             config = self._get_config()
-            if config[u'userid'] is None or len(config[u'userid'])==0 or config[u'apikey'] is None or len(config[u'apikey'])==0:
-                raise CommandError(u'Please fill credentials first')
+            if (
+                config["userid"] is None
+                or len(config["userid"]) == 0
+                or config["apikey"] is None
+                or len(config["apikey"]) == 0
+            ):
+                raise CommandError("Please fill credentials first")
 
-            userid = config[u'userid']
-            apikey = config[u'apikey']    
+            userid = config["userid"]
+            apikey = config["apikey"]
 
-        params = urllib.urlencode({
-            u'user': userid,
-            u'pass': apikey,
-            u'msg': u'Hello this is Cleep'
-        })
-        self.logger.debug(u'Request params: %s' % params)
+        params = urlencode(
+            {"user": userid, "pass": apikey, "msg": "Hello this is Cleep"}
+        )
+        self.logger.debug("Request params: %s", params)
 
         error = None
         try:
-            #launch request
-            try:
-                #try with ssl context
-                context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-                req = urllib2.urlopen(u'%s?%s' % (self.FREEMOBILESMS_API_URL, params), context=context)
-            except:
-                #fallback with no ssl context to be compatible with old python version (2.7.3)
-                req = urllib2.urlopen(u'%s?%s' % (self.FREEMOBILESMS_API_URL, params))
-            res = req.read()
-            status = req.getcode()
-            self.logger.debug(u'Test response: %s [%s]' % (res, status))
-            req.close()
+            url = f"{self.FREEMOBILESMS_API_URL}?{params}"
+            response = requests.get(url, timeout=2.0)
+            res = response.json()
+            status = response.status_code
+            self.logger.info("Test response: %s [%s]", res, status)
 
-            #parse request result
-            if status!=200:
-                self.logger.error(u'Unable to test: %s [%s]' % (self.FREEMOBILESMS_RESPONSE[status], status))
+            # parse request result
+            if status != 200:
+                self.logger.error(
+                    "Unable to test: %s [%s]",
+                    self.FREEMOBILESMS_RESPONSE[status],
+                    status,
+                )
                 error = self.FREEMOBILESMS_RESPONSE[status]
 
-        except:
-            self.logger.exception(u'Unable to test:')
-            error = u'Internal error'
+        except Exception:
+            self.logger.exception("Unable to test:")
+            error = "Internal error"
 
         if error is not None:
             raise CommandError(error)
 
         return True
 
-    def _render(self, profile):
+    def on_render(self, profile_name, profile_values):
         """
-        Render profile
+        On render profile
 
         Params:
-            profile (SmsProfile): SmsProfile instance
+            profile_name (str): profile name
+            profile_values (dict): profile values to render
 
         Returns:
             bool: True if render succeed, False otherwise
         """
         config = self._get_config()
-        params = urllib.urlencode({
-            u'user': config[u'userid'],
-            u'pass': config[u'apikey'],
-            u'msg': profile.message
-        })
+        params = urlencode(
+            {
+                "user": config["userid"],
+                "pass": config["apikey"],
+                "msg": profile_values["message"],
+            }
+        )
 
         error = False
         try:
-            #launch request
-            try:
-                #try with ssl context
-                context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-                req = urllib2.urlopen(u'%s?%s' % (self.FREEMOBILESMS_API_URL, params), context=context)
-            finally:
-                #fallback with no ssl context to be compatible with old python version (2.7.3)
-                req = urllib2.urlopen(u'%s?%s' % (self.FREEMOBILESMS_API_URL, params))
-            res = req.read()
-            status = req.getcode()
-            self.logger.debug(u'Send sms response: %s [%s]' % (res, status))
-            req.close()
+            url = f"{self.FREEMOBILESMS_API_URL}?{params}"
+            response = requests.get(url, timeout=2.0)
+            res = response.json()
+            status = response.status_code
+            self.logger.info("Test response: %s [%s]", res, status)
 
-            #parse request result
-            if status!=200:
-                self.logger.error(u'Unable to send sms: %s [%s]' % (self.FREEMOBILESMS_RESPONSE[status], status))
+            # parse request result
+            if status != 200:
+                self.logger.error(
+                    "Unable to send sms: %s [%s]",
+                    self.FREEMOBILESMS_RESPONSE[status],
+                    status,
+                )
                 error = True
 
-        except:
-            self.logger.exception(u'Unable to send sms:')
+        except Exception:
+            self.logger.exception("Unable to send sms:")
             error = True
 
         return error
-
