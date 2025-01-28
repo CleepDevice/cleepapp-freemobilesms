@@ -91,33 +91,15 @@ class Freemobilesms(CleepRenderer):
         Returns:
             bool: True if test succeed
         """
-        if userid is None or apikey is None:
-            config = self._get_config()
-            if (
-                config["userid"] is None
-                or len(config["userid"]) == 0
-                or config["apikey"] is None
-                or len(config["apikey"]) == 0
-            ):
-                raise CommandError("Please fill credentials first")
-
-            userid = config["userid"]
-            apikey = config["apikey"]
-
+        user_id, api_key = self.__get_credentials(userid, apikey)
         params = urlencode(
-            {"user": userid, "pass": apikey, "msg": "Hello this is Cleep"}
+            {"user": user_id, "pass": api_key, "msg": "Hello this is Cleep"}
         )
         self.logger.debug("Request params: %s", params)
 
-        error = None
         try:
-            url = f"{self.FREEMOBILESMS_API_URL}?{params}"
-            response = requests.get(url, timeout=2.0)
-            res = response.json()
-            status = response.status_code
-            self.logger.info("Test response: %s [%s]", res, status)
+            status, response = self.__send_request(params)
 
-            # parse request result
             if status != 200:
                 self.logger.error(
                     "Unable to test: %s [%s]",
@@ -127,11 +109,8 @@ class Freemobilesms(CleepRenderer):
                 error = self.FREEMOBILESMS_RESPONSE[status]
 
         except Exception:
-            self.logger.exception("Unable to test:")
-            error = "Internal error"
-
-        if error is not None:
-            raise CommandError(error)
+            self.logger.exception("Error sending sms during test:")
+            raise CommandError("Internal error (see logs)")
 
         return True
 
@@ -139,31 +118,26 @@ class Freemobilesms(CleepRenderer):
         """
         On render profile
 
-        Params:
+        Args:
             profile_name (str): profile name
             profile_values (dict): profile values to render
 
         Returns:
             bool: True if render succeed, False otherwise
         """
-        config = self._get_config()
-        params = urlencode(
-            {
-                "user": config["userid"],
-                "pass": config["apikey"],
-                "msg": profile_values["message"],
-            }
-        )
-
         error = False
         try:
-            url = f"{self.FREEMOBILESMS_API_URL}?{params}"
-            response = requests.get(url, timeout=2.0)
-            res = response.json()
-            status = response.status_code
-            self.logger.info("Test response: %s [%s]", res, status)
+            user_id, api_key = self.__get_credentials(None, None)
+            params = urlencode(
+                {
+                    "user": config["userid"],
+                    "pass": config["apikey"],
+                    "msg": profile_values["message"],
+                }
+            )
 
-            # parse request result
+            status, response = self.__send_request(params)
+
             if status != 200:
                 self.logger.error(
                     "Unable to send sms: %s [%s]",
@@ -177,3 +151,68 @@ class Freemobilesms(CleepRenderer):
             error = True
 
         return error
+
+    def __get_credentials(self, user_id, api_key):
+        """
+        Get credentials from command parameters or config
+
+        Args:
+            user_id (str): user identifier
+            api_key (str): api key
+
+        Returns:
+            tuple: credentials
+
+                (
+                    user id (str): user identifier
+                    api key (str): api key
+                )
+
+        Raises:
+            CommandError: command error exception
+
+        """
+        if user_id is None or api_key is None:
+            config = self._get_config()
+            if (
+                config["userid"] is None
+                or len(config["userid"]) == 0
+                or config["apikey"] is None
+                or len(config["apikey"]) == 0
+            ):
+                raise CommandError("Please fill credentials first")
+
+            user_id = config["userid"]
+            api_key = config["apikey"]
+
+        return user_id, api_key
+
+    def __send_request(self, params):
+        """
+        Send request to freemobile sms api
+
+        Args:
+            params (dict): dict of request parameters
+
+        Returns:
+            tuple: request response
+
+                (
+                    status (int): response status code. None if exception occured,
+                    res (dict): response data as json
+                )
+
+        """
+        error = False
+        try:
+            url = f"{self.FREEMOBILESMS_API_URL}?{params}"
+            response = requests.get(url, timeout=2.0)
+            res = response.json()
+            status = response.status_code
+            self.logger.info("Request response [%s]: %s", status, res)
+
+            return status, res
+
+        except Exception:
+            self.logger.exception("Unable to send sms:")
+            return None
