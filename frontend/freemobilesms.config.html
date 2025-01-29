@@ -1,32 +1,33 @@
 <div layout="column" layout-padding ng-cloak>
 
-    <div layout="row" layout-xs="column" layout-align="start center" layout-padding>
-        <div>
-            <img mod-img-src="freemobile.png"/>
-        </div>
-        <div>
-            <p><a href="http://mobile.free.fr/" target="_blank">Free mobile</a> is a french mobile service provider. Subscribers can freely sends sms to their own phone.</p>
-            <p>Please connect to your <a href="https://mobile.free.fr/moncompte" target="_blank">freemobile account</a> and go to "Gérer mon compte &gt; Mes options &gt; Notifications par SMS".</p>
-            <p>Then fill informations belowi:</p>
-        </div>
-    </div>
+    <config-note
+        cl-img-src="freemobile.png"
+        cl-note="<p><a href='http://mobile.free.fr/' target='_blank'>Free mobile</a> is a french mobile service provider. Subscribers can freely sends sms to their own phone.</p><p>Please connect to your <a href='https://mobile.free.fr/moncompte' target='_blank'>freemobile account</a> and go to 'Mon forfait mobile &gt; Mes options &gt; Notifications par SMS'.</p><p>Then fill informations below:</p>"
+        cl-type="info"
+    ></config-note>
 
-    <div layout-gt-sm="row">
-        <md-input-container class="md-block" flex-gt-sm>
-            <label>User id (8 digits)</label>
-            <input type="text" ng-model="freemobilesmsCtl.userid"></input>
-        </md-input-container>
-        <md-input-container class="md-block" flex-gt-sm>
-            <label>Api key</label>
-            <input type="text" ng-model="freemobilesmsCtl.apikey"></input>
-        </md-input-container>
-        <div>
-            <md-button class="md-raised md-primary" ng-click="freemobilesmsCtl.setCredentials()" aria-label="Save">Save</md-button>
-        </div>
-        <div>
-            <md-button class="md-raised md-primary" ng-click="freemobilesmsCtl.test()" aria-label="Test">Test</md-button>
-        </div>
-    </div>
+    <config-section cl-title="Configuration" cl-icon="cog"></config-section>
+    <config-text
+        cl-title="User id (8 digits)"
+        cl-model="$ctrl.userid"
+    ></config-text>
+    <config-text
+        cl-title="Api key"
+        cl-model="$ctrl.apikey"
+    ></config-text>
+    <config-button
+        cl-icon=""
+        cl-btn-icon="content-save"
+        cl-btn-label="Save"
+        cl-click="$ctrl.setCredentials()"
+    ></config-button>
+
+    <config-section cl-title="Test" cl-icon="test-tube"></config-section>
+    <config-button
+        cl-title="Set your credentials above then click on test button to receive a test SMS"
+        cl-btn-icon="cursor-default-click"
+        cl-btn-label="Test"
+        cl-click="$ctrl.test()"
+    ></config-button>
 
 </div>
-

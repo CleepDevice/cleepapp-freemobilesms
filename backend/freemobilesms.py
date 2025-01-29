@@ -12,11 +12,12 @@ __all__ = ["Freemobilesms"]
 
 class Freemobilesms(CleepRenderer):
     """
-    FreemobileSms renderer
+    FreemobileSms application.
+    this application is able to render core.alert.send events
     """
 
     MODULE_AUTHOR = "Cleep"
-    MODULE_VERSION = "1.0.0"
+    MODULE_VERSION = "1.1.0"
     MODULE_PRICE = 0
     MODULE_CATEGORY = "SERVICE"
     MODULE_DEPS = []
@@ -73,10 +74,6 @@ class Freemobilesms(CleepRenderer):
         if apikey is None or len(apikey) == 0:
             raise MissingParameter("Apikey parameter is missing")
 
-        # test credentials
-        if not self.test(userid, apikey):
-            raise CommandError("Unable to send test")
-
         # save config
         return self._update_config({"userid": userid, "apikey": apikey})
 
@@ -98,7 +95,7 @@ class Freemobilesms(CleepRenderer):
         self.logger.debug("Request params: %s", params)
 
         try:
-            status, response = self.__send_request(params)
+            status = self.__send_request(params)
 
             if status != 200:
                 self.logger.error(
@@ -136,7 +133,7 @@ class Freemobilesms(CleepRenderer):
                 }
             )
 
-            status, response = self.__send_request(params)
+            status = self.__send_request(params)
 
             if status != 200:
                 self.logger.error(
@@ -195,23 +192,18 @@ class Freemobilesms(CleepRenderer):
             params (dict): dict of request parameters
 
         Returns:
-            tuple: request response
-
-                (
-                    status (int): response status code. None if exception occured,
-                    res (dict): response data as json
-                )
+            int: response status code
 
         """
         error = False
         try:
             url = f"{self.FREEMOBILESMS_API_URL}?{params}"
+            self.logger.debug('Request url: %s', url)
             response = requests.get(url, timeout=2.0)
-            res = response.json()
             status = response.status_code
-            self.logger.info("Request response [%s]: %s", status, res)
+            self.logger.info("Request response: %s", status)
 
-            return status, res
+            return status
 
         except Exception:
             self.logger.exception("Unable to send sms:")
