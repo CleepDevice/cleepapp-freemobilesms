@@ -77,16 +77,15 @@ class Freemobilesms(CleepRenderer):
         # save config
         return self._update_config({"userid": userid, "apikey": apikey})
 
-    def test(self, userid=None, apikey=None):
+    def test(self):
         """
         Send test sms
 
-        Params:
-            userid: userid. If not specified use userid from config
-            apikey: apikey. If not specified use apikey from config
-
         Returns:
             bool: True if test succeed
+
+        Raises:
+            CommandError: failed to send SMS
         """
         user_id, api_key = self.__get_credentials(userid, apikey)
         params = urlencode(
@@ -127,15 +126,17 @@ class Freemobilesms(CleepRenderer):
             user_id, api_key = self.__get_credentials(None, None)
             params = urlencode(
                 {
-                    "user": config["userid"],
-                    "pass": config["apikey"],
+                    "user": user_id,
+                    "pass": api_key,
                     "msg": profile_values["message"],
                 }
             )
 
             status = self.__send_request(params)
 
-            if status != 200:
+            if status == 200:
+                self.logger.info("SMS sent successfully")
+            else:
                 self.logger.error(
                     "Unable to send sms: %s [%s]",
                     self.FREEMOBILESMS_RESPONSE[status],
@@ -201,7 +202,7 @@ class Freemobilesms(CleepRenderer):
             self.logger.debug('Request url: %s', url)
             response = requests.get(url, timeout=2.0)
             status = response.status_code
-            self.logger.info("Request response: %s", status)
+            self.logger.debug("Request response status: %s", status)
 
             return status
 
