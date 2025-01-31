@@ -4,7 +4,7 @@
 from urllib.parse import urlencode
 import requests
 from cleep.core import CleepRenderer
-from cleep.exception import CommandError, MissingParameter
+from cleep.exception import CommandError
 from cleep.profiles.alertprofile import AlertProfile
 
 __all__ = ["Freemobilesms"]
@@ -25,7 +25,7 @@ class Freemobilesms(CleepRenderer):
     MODULE_LONGDESCRIPTION = (
         "French Freemobile telecom provider gives a way to send to you (and only you) ",
         "freely SMS using your account. Configure this application and your device will ",
-        "be able to send you some message directly on your mobile."
+        "be able to send you some message directly on your mobile.",
     )
     MODULE_TAGS = ["sms", "alert", "freemobile"]
     MODULE_COUNTRY = "fr"
@@ -69,24 +69,26 @@ class Freemobilesms(CleepRenderer):
         Returns:
             bool: True if credentials saved successfully
         """
-        self._check_parameters([
-            {
-                "name": "userid",
-                "value": userid,
-                "type": str,
-                "none": False,
-                "empty": False,
-                "validator": lambda val: len(val) == 8,
-                "message": "Userid must be 8 characters long",
-            },
-            {
-                "name": "apikey",
-                "value": apikey,
-                "type": str,
-                "none": False,
-                "empty": False,
-            }
-        ])
+        self._check_parameters(
+            [
+                {
+                    "name": "userid",
+                    "value": userid,
+                    "type": str,
+                    "none": False,
+                    "empty": False,
+                    "validator": lambda val: len(val) == 8,
+                    "message": "Userid must be 8 characters long",
+                },
+                {
+                    "name": "apikey",
+                    "value": apikey,
+                    "type": str,
+                    "none": False,
+                    "empty": False,
+                },
+            ]
+        )
 
         return self._update_config({"userid": userid, "apikey": apikey})
 
@@ -108,12 +110,14 @@ class Freemobilesms(CleepRenderer):
 
         try:
             status = self.__send_request(params)
-        except Exception:
+        except Exception as error:
             self.logger.exception("Error sending sms during test:")
-            raise CommandError("Internal error (see logs)")
+            raise CommandError("Internal error (see logs)") from error
 
         if status != 200:
-            message = self.FREEMOBILESMS_RESPONSE.get(status, f"Unknown error [{status}]")
+            message = self.FREEMOBILESMS_RESPONSE.get(
+                status, f"Unknown error [{status}]"
+            )
             self.logger.error(
                 "Error sending test SMS: %s [%s]",
                 message,
@@ -137,9 +141,11 @@ class Freemobilesms(CleepRenderer):
         try:
             user_id, api_key = self.__get_credentials()
         except Exception:
-            self.logger.warning("Unable to send SMS because credentials are not configured")
+            self.logger.warning(
+                "Unable to send SMS because credentials are not configured"
+            )
             return False
-        
+
         try:
             params = urlencode(
                 {
@@ -151,16 +157,18 @@ class Freemobilesms(CleepRenderer):
 
             status = self.__send_request(params)
 
-            if status == 200:
-                self.logger.info("SMS sent successfully")
-                return True
-            else:
+            if status != 200:
                 self.logger.error(
                     "Unable to send SMS: %s [%s]",
-                    self.FREEMOBILESMS_RESPONSE.get(status, f"Unknown error [{status}]"),
+                    self.FREEMOBILESMS_RESPONSE.get(
+                        status, f"Unknown error [{status}]"
+                    ),
                     status,
                 )
                 return False
+
+            self.logger.info("SMS sent successfully")
+            return True
 
         except Exception:
             self.logger.exception("Unable to send sms:")
@@ -205,7 +213,7 @@ class Freemobilesms(CleepRenderer):
 
         """
         url = f"{self.FREEMOBILESMS_API_URL}?{params}"
-        self.logger.debug('Request url: %s', url)
+        self.logger.debug("Request url: %s", url)
         response = requests.get(url, timeout=2.0)
         status = response.status_code
         self.logger.debug("Request response status: %s", status)
