@@ -22,7 +22,7 @@ function(toast, freemobilesmsService, cleepService) {
 
         self.setCredentials = function() {
             freemobilesmsService.setCredentials(self.userid, self.apikey)
-                .then(function(resp) {
+                .then(function() {
                     return cleepService.reloadModuleConfig('freemobilesms');
                 })
                 .then(function(config) {
@@ -34,7 +34,7 @@ function(toast, freemobilesmsService, cleepService) {
 
         self.test = function() {
             freemobilesmsService.test()
-                .then(function(resp) {
+                .then(function() {
                     toast.success('Sms sent. Check your phone.');
                 });
         };
