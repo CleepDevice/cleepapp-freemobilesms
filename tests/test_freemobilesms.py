@@ -84,7 +84,7 @@ class TestsFreemobilesms(unittest.TestCase):
 
         self.assertTrue(result)
 
-    def test_test_invalid_response(self):
+    def test_test_no_credentials(self):
         self.init_context()
         self.app._get_config = Mock(return_value={"userid": None, "apikey": None})
 
