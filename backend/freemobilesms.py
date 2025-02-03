@@ -18,14 +18,14 @@ class Freemobilesms(CleepRenderer):
 
     MODULE_AUTHOR = "Cleep"
     MODULE_VERSION = "1.1.0"
-    MODULE_PRICE = 0
+    MODULE_PRICE = 0.0
     MODULE_CATEGORY = "SERVICE"
     MODULE_DEPS = []
     MODULE_DESCRIPTION = "Sends you SMS alerts using french Freemobile provider."
     MODULE_LONGDESCRIPTION = (
-        "French Freemobile telecom provider gives a way to send to you (and only you) ",
-        "freely SMS using your account. Configure this application and your device will ",
-        "be able to send you some message directly on your mobile.",
+        "French Freemobile telecom provider gives a way to send to you (and only you) "
+        "freely SMS using your account. Configure this application and your device will "
+        "be able to send you some message directly on your mobile."
     )
     MODULE_TAGS = ["sms", "alert", "freemobile"]
     MODULE_COUNTRY = "fr"
@@ -63,8 +63,8 @@ class Freemobilesms(CleepRenderer):
         Set FreemobileSms credentials
 
         Params:
-            userid: userid (string)
-            apikey: apikey (string)
+            userid (str): userid
+            apikey (str): apikey
 
         Returns:
             bool: True if credentials saved successfully
@@ -92,20 +92,15 @@ class Freemobilesms(CleepRenderer):
 
         return self._update_config({"userid": userid, "apikey": apikey})
 
-    def test(self):
+    def send_sms(self, message):
         """
-        Send test sms
+        Send sms message
 
-        Returns:
-            bool: True if test succeed
-
-        Raises:
-            CommandError: failed to send SMS
+        Args:
+            message (str): message to send
         """
         user_id, api_key = self.__get_credentials()
-        params = urlencode(
-            {"user": user_id, "pass": api_key, "msg": "Hello this is Cleep"}
-        )
+        params = urlencode({"user": user_id, "pass": api_key, "msg": message})
         self.logger.debug("Request params: %s", params)
 
         try:
@@ -126,6 +121,18 @@ class Freemobilesms(CleepRenderer):
             raise CommandError(message)
 
         return True
+
+    def test(self):
+        """
+        Send test sms
+
+        Returns:
+            bool: True if test succeed
+
+        Raises:
+            CommandError: failed to send SMS
+        """
+        return self.send_sms("Hello this is Cleep")
 
     def on_render(self, profile_name, profile_values):
         """

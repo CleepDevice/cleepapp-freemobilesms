@@ -69,6 +69,63 @@ class TestsFreemobilesms(unittest.TestCase):
         )
 
     @responses.activate
+    def test_send_sms(self):
+        self.init_context()
+        responses.add(
+            responses.GET,
+            "https://smsapi.free-mobile.fr/sendmsg?user=useriddd&pass=apikey&msg=test",
+            status=200,
+        )
+        self.app._get_config = Mock(
+            return_value={"userid": "useriddd", "apikey": "apikey"}
+        )
+
+        result = self.app.send_sms("test")
+
+        self.assertTrue(result)
+
+    def test_send_sms_no_credentials(self):
+        self.init_context()
+        self.app._get_config = Mock(return_value={"userid": None, "apikey": None})
+
+        with self.assertRaises(CommandError) as cm:
+            self.app.send_sms("test")
+        self.assertEqual(str(cm.exception), "Please fill credentials first")
+
+    @responses.activate
+    def test_send_sms_invalid_response(self):
+        self.init_context()
+        responses.add(
+            responses.GET,
+            "https://smsapi.free-mobile.fr/sendmsg?user=useriddd&pass=apikey&msg=test",
+            status=402,
+        )
+        self.app._get_config = Mock(
+            return_value={"userid": "useriddd", "apikey": "apikey"}
+        )
+
+        with self.assertRaises(CommandError) as cm:
+            self.app.send_sms("test")
+        self.assertEqual(str(cm.exception), "SMS limit reached")
+
+    @responses.activate
+    def test_send_sms_exception(self):
+        self.init_context()
+        responses.add(
+            responses.GET,
+            "https://smsapi.free-mobile.fr/sendmsg?user=useriddd&pass=apikey&msg=test",
+            body=Exception("Test error"),
+            status=404,
+        )
+        self.app._get_config = Mock(
+            return_value={"userid": "useriddd", "apikey": "apikey"}
+        )
+
+        with self.assertRaises(CommandError) as cm:
+            self.app.send_sms("test")
+        self.assertEqual(str(cm.exception), "Internal error (see logs)")
+
+    @responses.activate
     def test_test(self):
         self.init_context()
         responses.add(
@@ -83,47 +140,6 @@ class TestsFreemobilesms(unittest.TestCase):
         result = self.app.test()
 
         self.assertTrue(result)
-
-    def test_test_no_credentials(self):
-        self.init_context()
-        self.app._get_config = Mock(return_value={"userid": None, "apikey": None})
-
-        with self.assertRaises(CommandError) as cm:
-            self.app.test()
-        self.assertEqual(str(cm.exception), "Please fill credentials first")
-
-    @responses.activate
-    def test_test_invalid_response(self):
-        self.init_context()
-        responses.add(
-            responses.GET,
-            "https://smsapi.free-mobile.fr/sendmsg?user=useriddd&pass=apikey&msg=Hello+this+is+Cleep",
-            status=402,
-        )
-        self.app._get_config = Mock(
-            return_value={"userid": "useriddd", "apikey": "apikey"}
-        )
-
-        with self.assertRaises(CommandError) as cm:
-            self.app.test()
-        self.assertEqual(str(cm.exception), "SMS limit reached")
-
-    @responses.activate
-    def test_test_exception(self):
-        self.init_context()
-        responses.add(
-            responses.GET,
-            "https://smsapi.free-mobile.fr/sendmsg?user=useriddd&pass=apikey&msg=Hello+this+is+Cleep",
-            body=Exception("Test error"),
-            status=404,
-        )
-        self.app._get_config = Mock(
-            return_value={"userid": "useriddd", "apikey": "apikey"}
-        )
-
-        with self.assertRaises(CommandError) as cm:
-            self.app.test()
-        self.assertEqual(str(cm.exception), "Internal error (see logs)")
 
     @responses.activate
     def test_on_render(self):

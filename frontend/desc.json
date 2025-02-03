@@ -1,7 +1,10 @@
 {
     "icon": "message-processing",
+    "global": {
+        "js": ["freemobilesms.service.js"]
+    },
     "config": {
-        "js": ["freemobilesms.config.js", "freemobilesms.service.js"],
+        "js": ["freemobilesms.config.js"],
         "html": ["freemobilesms.config.html"]
     }
 }
